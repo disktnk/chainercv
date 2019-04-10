@@ -91,12 +91,17 @@ class FasterRCNN(chainer.Chain):
         assert(not chainer.config.train)
         hs = self.extractor(x)
         rpn_locs, rpn_confs = self.rpn(hs)
-        anchors = self.rpn.anchors(h.shape[2:] for h in hs)
-        rois, roi_indices = self.rpn.decode(
-            rpn_locs, rpn_confs, anchors, x.shape)
-        rois, roi_indices = self.head.distribute(rois, roi_indices)
+        # anchors = self.rpn.anchors(h.shape[2:] for h in hs)
+        # rois, roi_indices = self.rpn.decode(
+        #     rpn_locs, rpn_confs, anchors, x.shape)
+        rois, roi_indices = self.rpn.decode(hs, rpn_locs, rpn_confs, x.shape)
+        # rois, roi_indices = self.head.distribute(rois, roi_indices)
+        unpack_ret = self.head.distribute(rois, roi_indices)
+        rois = [unpack_ret[i] for i in range(5)]
+        roi_indices = [unpack_ret[i] for i in range(5, 10)]
         head_locs, head_confs = self.head(hs, rois, roi_indices)
-        return rois, roi_indices, head_locs, head_confs
+        # return rois, roi_indices, head_locs, head_confs
+        return tuple(rois) + tuple(roi_indices) + (head_locs, head_confs)
 
     def predict(self, imgs):
         """Detect objects from images.
