@@ -209,8 +209,11 @@ class VGG16RoIHead(chainer.Chain):
                 which bounding boxes correspond to. Its shape is :math:`(R',)`.
 
         """
-        roi_indices = roi_indices.astype(np.float32)
-        indices_and_rois = self.xp.concatenate(
+        # roi_indices = roi_indices.astype(np.float32)
+        # indices_and_rois = self.xp.concatenate(
+        #     (roi_indices[:, None], rois), axis=1)
+        roi_indices = roi_indices.array.astype(np.float32)
+        indices_and_rois = F.concat(
             (roi_indices[:, None], rois), axis=1)
         pool = _roi_pooling_2d_yx(
             x, indices_and_rois, self.roi_size, self.roi_size,
